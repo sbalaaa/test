@@ -1,0 +1,38 @@
+private static final int NO_OF_LINES_PER_FILE = 200000;
+private List<String> fileNames = new ArrayList<String>();
+int countOfFile=1;
+
+File input = getOrgFile();
+Scanner scanner = new Scanner(input);
+int count = 0;
+ArrayList<String> fileList = new ArrayList<String>(NO_OF_LINES_PER_FILE);
+while (scanner.hasNextLine()) {
+	String presentLine = scanner.nextLine();
+	fileList.add(presentLine);
+	if (count > NO_OF_LINES_PER_FILE ) {
+		writeCollectionToFile(fileList);
+		fileList.clear();
+	}
+	
+}
+
+
+private void writeCollectionToFile(ArrayList<String> fileList) throws IOException{
+		File input = getOrgFile();
+		String absolutePath = input.getAbsolutePath();								
+		String filePath = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator)) + File.separator;
+		String fileName =   filePath+"entrollvolume-"+countOfFile+".csv";
+		countOfFile++;
+		log.info("Splitted File Name is : " + fileName);
+		FileWriter fstream1 = new FileWriter(fileName);     // Destination File Location
+		BufferedWriter out = new BufferedWriter(fstream1); 
+		
+		for (String object : fileList) {
+			out.write(object);
+			out.newLine();
+		}
+		out.flush();
+		out.close();
+		log.debug("Finishes completing the spliting of file "+fileName);
+		return fileName;
+	}

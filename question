@@ -1,0 +1,13 @@
+1. Success email.
+2. Error email which has more than allowed file errors - ERROR: Drop file was not processed because the following error occurred when loading file:
+3. Error email which has unknown error - ERROR: File Diff Process encountered unknown exception:
+4. What is the use of second parameter
+private static int maxFileErrors = Integer.parseInt(Configuration.getProperty("max.file.errors", "100"));
+private static long sleepTime = Long.parseLong(Configuration.getProperty("sleep.interval", "300000"));
+5. When override file will be generated?
+private static String overrideNewFilePath = Configuration.getProperty("drop.file.location") + "override_" + Configuration.getProperty("drop.file.name");
+if (overrideFile.exists()) {
+	dropFile = overrideFile;
+	isOverride = true;
+}
+6. Is there any sample account id for testing?

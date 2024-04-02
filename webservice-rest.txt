@@ -1,0 +1,436 @@
+
+----------------------------------------------------------
+/**
+ * 
+ */
+package com.sc.obs.config;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ * @author 1567880
+ *
+ */
+@Configuration
+public class SSLConfig {
+
+    @Value("${proxy.host}")
+    private String proxyHost;
+
+    @Value("${proxy.port}")
+    private String proxyPort;
+
+    @Value("${proxy.useProxy}")
+    private Boolean hasProxy;
+
+    @Value("${sanlam.userName}")
+    public String userName;
+
+    @Value("${sanlam.password}")
+    private String password;
+
+    @Value("${sanlam.readTimeout}")
+    private String readTimeout;
+
+    @Value("${sanlam.connectionTimeout}")
+    private String connectionTimeout;
+
+    @Autowired
+    private RestTemplateResponseErrorHandler responseHandler;
+
+
+    @Bean(name = "createProxyHost")
+    public HttpHost createProxyHost(){
+
+        if (hasProxy) {
+            int proxyPortNumber = Integer.parseInt(proxyPort);
+            return new HttpHost(proxyHost, proxyPortNumber,"http");
+        }
+
+        return null;
+    }
+
+    @Bean(name = "restClient")
+    public RestTemplate getRestClient() throws NoSuchAlgorithmException, KeyManagementException {
+        RestTemplate restClient = new RestTemplate();
+
+        SSLContext context = SSLContext.getInstance("TLSv1.2");
+        context.init(null, null, null);
+
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(5, TimeUnit.SECONDS);
+        connectionManager.setMaxTotal(500);
+        connectionManager.setDefaultMaxPerRoute(25);
+
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        UsernamePasswordCredentials credentials
+        = new UsernamePasswordCredentials(userName, password);
+        credentialsProvider.setCredentials(AuthScope.ANY, credentials);
+
+        CloseableHttpClient httpClient = HttpClientBuilder // org.apache.http.impl.client.CloseableHttpClient;
+                .create()
+                .setSSLContext(context)
+                .setProxy(createProxyHost())
+                .setConnectionManager(connectionManager)
+                .setDefaultCredentialsProvider(credentialsProvider)
+                .build();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient); // org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+        factory.setConnectTimeout(Integer.valueOf(connectionTimeout));
+        factory.setReadTimeout(Integer.valueOf(readTimeout));
+        restClient.setRequestFactory(factory);
+        restClient.setErrorHandler(responseHandler);
+        return restClient;
+    }
+
+
+}
+
+
+-----------
+
+/**
+ * 
+ */
+package com.sc.obs.sanlam.adapter;
+
+
+import org.apache.commons.lang.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import com.sc.csl.retail.core.gateway.CSLRestGateway;
+import com.sc.csl.retail.core.log.LogTimeTaken;
+import com.sc.csl.retail.core.util.CSLJsonUtils;
+import com.sc.obs.code.Country;
+import com.sc.obs.code.Key;
+import com.sc.obs.config.ObsKEConstants;
+import com.sc.obs.sanlam.SanlamRequest;
+import com.sc.obs.sanlam.SanlamResponse;
+
+/**
+ * @author 1567880
+ *
+ */
+@Component("sanlamAdapter")
+public class SanlamAdapter extends CSLRestGateway {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SanlamAdapter.class);
+
+    @Value("${sanlam.contextpath}")
+    private String sanlamContextPath;
+
+    @Value("${sanlam.authentication-id-part1}")
+    private String authIdPartOne;
+
+    @Value("${sanlam.authentication-id-part2}")
+    private String authIdPartTwo;
+
+    @Autowired
+    @Qualifier("restClient")
+    private RestTemplate restClient;
+
+    /*
+     * SanlamRequest payload - primary payload when content type is application/json
+     * MultiValueMap<String, Object> paramsMap - seconday payload when Content-Type is multipart/form-data.
+     * 
+     */
+    @LogTimeTaken
+    public SanlamResponse callSanlam(String serviceName,HttpMethod httpMethod,SanlamRequest payload,Class<? extends SanlamResponse> respClass, MediaType contentType, MultiValueMap<String, String> httpHeadersMap){
+        return callSanlam(serviceName, httpMethod, payload, respClass, contentType, httpHeadersMap, null);
+    }
+    /*
+     * SanlamRequest payload - primary payload when content type is application/json
+     * MultiValueMap<String, Object> paramsMap - seconday payload when Content-Type is multipart/form-data.
+     * 
+     */
+    @LogTimeTaken
+    public SanlamResponse callSanlam(String serviceName,HttpMethod httpMethod,SanlamRequest payload,Class<? extends SanlamResponse> respClass, MediaType contentType, MultiValueMap<String, String> httpHeadersMap, MultiValueMap<String, Object> multipartDataMap){
+        LOGGER.info("sanlam request URL : {}",sanlamContextPath + serviceName);
+        LOGGER.debug("sanlam request payload : {}",payload);
+        SanlamResponse response = (SanlamResponse)restClient.exchange(sanlamContextPath + serviceName,httpMethod, prepareReqEntity(payload,contentType,httpHeadersMap,multipartDataMap),respClass).getBody();
+        LOGGER.info("SANLAM response :  {}",response);
+        return response;
+    }
+
+    private HttpEntity<Object> prepareReqEntity(SanlamRequest request, MediaType contentType, MultiValueMap<String, String> httpHeadersMap,MultiValueMap<String, Object> multipartDataMap){
+        HttpHeaders headers = new HttpHeaders();
+        if(contentType==null){
+            headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
+        }else{
+            headers.setContentType(contentType);
+        }
+        if(httpHeadersMap!=null){
+            headers.putAll(httpHeadersMap);
+        }
+        headers.add(Key.COUNTRY, Country.KE);
+        headers.add(ObsKEConstants.AUTHENTICATION_ID, authIdPartOne+":"+authIdPartTwo);
+        String requestId =  RandomStringUtils.randomAlphanumeric(40);
+        LOGGER.info("requestId : {}",requestId);
+        headers.add(ObsKEConstants.REQUEST_ID,requestId);
+        HttpEntity<Object> entity = null;
+        if(headers.getContentType().equals(MediaType.MULTIPART_FORM_DATA)){
+            entity = new HttpEntity<>(multipartDataMap,headers);
+        }else{
+            entity = new HttpEntity<>(CSLJsonUtils.toJson(request), headers);
+        }
+        LOGGER.debug("sanlam request entity : {}",entity);
+        return entity;
+    }
+}
+
+
+-----------------
+
+private HomePolicyResponseWrapper sendApplicationToISP(SanlamRequest validationReq, String applicationStage)
+{
+	MultiValueMap<String ,String> headers = new HttpHeaders();
+	headers.add(POLICY_STATE_HEADER,applicationStage);
+	return (HomePolicyResponseWrapper) sanlamAdapter.callSanlam(SERVICE_URL, HttpMethod.PATCH,
+			validationReq, HomePolicyResponseWrapper.class,MediaType.APPLICATION_JSON ,headers);
+
+}
+
+----------------
+
+
+import java.io.IOException;
+
+import javax.ws.rs.NotFoundException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResponseErrorHandler;
+
+import com.sc.csl.retail.core.exception.TechnicalException;
+
+/**
+ * @author 1567880
+ *
+ */
+@Component
+public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestTemplateResponseErrorHandler.class);
+    @Override
+    public boolean hasError(ClientHttpResponse httpResponse) 
+            throws IOException {
+
+        return (
+                httpResponse.getStatusCode().series() == HttpStatus.Series.CLIENT_ERROR 
+                || httpResponse.getStatusCode().series() == HttpStatus.Series.SERVER_ERROR);
+    }
+
+    @Override
+    public void handleError(ClientHttpResponse httpResponse) 
+            throws IOException {
+        LOGGER.error("httpResponse.getStatusCode()   >>>>>  {}",httpResponse.getStatusCode().value());
+
+        if (httpResponse.getStatusCode()
+                .series() == HttpStatus.Series.SERVER_ERROR) {
+            // handle SERVER_ERROR
+            throw new TechnicalException(httpResponse.getStatusText());
+        } else if (httpResponse.getStatusCode()
+                .series() == HttpStatus.Series.CLIENT_ERROR) {
+            // handle CLIENT_ERROR
+            if (httpResponse.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new NotFoundException();
+            }
+        }
+    }
+}
+
+
+------------------------- To upload a file to a Rest Service
+
+
+/**
+ * 
+ */
+package com.sc.obs.upload.service;
+
+import java.io.IOException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import com.sc.csl.retail.core.exception.BusinessException;
+import com.sc.obs.config.ObsKEConstants;
+import com.sc.obs.config.ApplicationError;
+import com.sc.obs.exception.ObsBusinessException;
+import com.sc.obs.sanlam.adapter.SanlamAdapter;
+import com.sc.obs.sanlam.application.common.ApplicationErrorCode;
+import com.sc.obs.upload.model.FileModel;
+import com.sc.obs.upload.model.SanlamMotorDocumentResponseWrapper;
+import com.sc.obs.upload.model.UploadModel;
+
+/**
+ * @author 1567880
+ *
+ */
+@Service
+public class DocUploadService {
+
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(DocUploadService.class);
+
+    @Autowired
+    private SanlamAdapter sanlamAdapter;
+
+    @Value("${sanlam.doc-upload-url}")
+    private String docUploadUrl;
+
+    @Value("${docupload.allowedFileTypes}")
+    private String allowedFileTypes;
+
+    public SanlamMotorDocumentResponseWrapper documentUpload(
+            UploadModel uploadModel) throws IOException {
+
+        LOGGER.debug("Multiple file upload! With UploadModel");
+        MultiValueMap<String, String> headersMap = new LinkedMultiValueMap<String, String>();
+        headersMap.add(ObsKEConstants.QUOTATION_NUMBER, uploadModel.getQuotationId());
+        headersMap.add(ObsKEConstants.UPLOAD_STATE, uploadModel.getUploadState());
+        MultiValueMap<String, Object> multipartDataMap = new LinkedMultiValueMap<String, Object>();
+        convertUploadModelToMap(uploadModel, multipartDataMap);
+        SanlamMotorDocumentResponseWrapper response = (SanlamMotorDocumentResponseWrapper)sanlamAdapter.callSanlam(docUploadUrl, HttpMethod.POST, null, SanlamMotorDocumentResponseWrapper.class, MediaType.MULTIPART_FORM_DATA, headersMap, multipartDataMap);
+        return response;
+
+    }
+
+    private void convertUploadModelToMap(UploadModel uploadModel,
+            MultiValueMap<String, Object> paramsMap)throws IOException {
+        int counter = 0;
+        validateFileFormat(uploadModel);
+        for(FileModel fileModel:uploadModel.getFile()){
+            ByteArrayResource contentsAsResource = null;
+            if(fileModel.getFileContent()!=null){
+                contentsAsResource = new ByteArrayResource(fileModel.getFileContent().getBytes()){
+                    @Override
+                    public String getFilename(){
+                        return fileModel.getFileContent().getOriginalFilename();
+                    }
+                };
+            }
+            paramsMap.add("file["+counter+"].fileId", fileModel.getFileId());
+            paramsMap.add("file["+counter+"].fileContent", contentsAsResource);
+            paramsMap.add("file["+counter+"].fileType", fileModel.getFileType());
+            paramsMap.add("file["+counter+"].fileName", fileModel.getFileName());
+            counter++;
+        }
+    }
+
+    private void validateFileFormat(UploadModel uploadModel) {
+        String fileName = "";
+        for(FileModel fileModel:uploadModel.getFile()){
+            if(ObsKEConstants.UPLOAD.equals(uploadModel.getUploadState())){
+                if(fileModel.getFileContent()!=null){
+                    fileName = fileModel.getFileContent().getOriginalFilename();
+                    int lastIndex = fileName.lastIndexOf('.');
+                    String substring = fileName.substring(lastIndex+1, fileName.length());
+                    if (!allowedFileTypes.contains(substring.toLowerCase())){
+                        String errorMessage = "Invalid file format "+substring+", allowed formats are "+allowedFileTypes;
+                        LOGGER.error(errorMessage);
+                        throw new ObsBusinessException(ApplicationErrorCode.OBS_DOC_UPLOAD_UN_SUPPORTED_FILE_FORMAT);
+                    }
+                }else{
+                    LOGGER.error("Failed to upload document, reason -> File is invalid or NULL");
+                    throw new ObsBusinessException(ApplicationErrorCode.OBS_DOC_UPLOAD_FILE_IS_INVALID_OR_NULL);
+                }
+            }
+
+            if(ObsKEConstants.DELETE.equals(uploadModel.getUploadState()) && StringUtils.isEmpty(fileModel.getFileId())){
+                LOGGER.error("Failed to delete document, reason -> File Id is not valid");
+                throw new ObsBusinessException(ApplicationErrorCode.OBS_DOC_UPLOAD_INVALID_FILE_ID);
+            }
+        }
+    }
+
+}
+
+
+-------------------------
+
+@RestController
+public class DocUploadController {
+
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(DocUploadController.class);
+
+    @Autowired
+    private DocUploadService docUploadService;
+
+    @PostMapping("/docupload")
+    public ResponseEntity<SanlamMotorDocumentResponseWrapper> documentUpload(
+            @ModelAttribute UploadModel uploadModel)throws IOException {
+
+        LOGGER.debug("Multiple file upload! With UploadModel");
+        SanlamMotorDocumentResponseWrapper response = docUploadService.documentUpload(uploadModel);
+        return new ResponseEntity(response, HttpStatus.OK);
+
+    }
+
+}
+
+-------------
+@RequestMapping(value = CUSTOMERS_ME_URL, method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
+    public String getCustomerMe(@RequestHeader(value = "csl_user",required=false) String cslUserHeaderStr,
+                                @RequestHeader(value = "Authorization",required=false) String bearerToken) throws Exception {
+		if(bearerToken!=null){
+            return IOUtils.toString(getClass().getResourceAsStream("/json/R5956789F.json"), StandardCharsets.UTF_8);
+        }
+     }
+}
+
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import org.springframework.http.HttpEntity;
+@RequestMapping(value = QUOTE, method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
+public String getQuote(@RequestHeader(value = "AuthenticationID") String authenticationID,
+		HttpEntity<String> httpEntity) {
+	 String requestJSON = httpEntity.getBody();
+	 String fileName = null;
+	 if(requestJSON.contains("\"mode\":\"edit\"")){
+		 fileName = "/sanlam/HomeQuoteEditResponse.json";
+	 }else{
+		 fileName = "/sanlam/HomeQuoteAddResponse.json";
+	 }
+	 return getSanlamQuoteResponse(fileName);
+}

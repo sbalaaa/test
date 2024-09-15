@@ -1,0 +1,54 @@
+One major component used for Insight 360 is the Camel Salesforce component. 
+
+Insight 360 Integration App
+
+This application facilitates moves the data between commercebank salesforce to commercebank's client systems or dependent systems.
+It generates various reports and send to the clients.
+
+
+----
+<java.version>17</java.version>
+<springboot.version>3.2.4</springboot.version>
+<camel.version>4.5.0</camel.version>
+	
+--
+
+
+
+
+TSYS - Credit Card System
+There are 3 TSYS processes that run currently.
+
+SFDC to TSYS - pulls data periodically throughout the day and updates TSYS.
+TSYS to SFDC - pulls data nightly and updates SF
+
+------------------
+
+ACH Billing report to Account Analysis so that we can properly bill our clients.
+
+
+------------------
+
+D&B Account Manager
+
+Synchronizing Account Manager with D&B
+
+There are 5 processes that run for DBAM
+
+AM to SFDC - listens for a csv file and processes the updates to SF
+AM to SFDC HSF Only - listens for a txt file and processes the update to SF
+SFDC to AM - pulls data at 6:33pm Mon - Fri
+SFDC to AM HSF Only - pulls data for HSF at 6:35pm Mon - Fri
+
+------------------
+
+Initial Vendor Upload - Vendor Onboarding Database (VODB) to Salesforce
+Created by Unknown User (tkendall), last modified by Mundhe, Bhagyashree on Aug 23, 2023
+Background / Business Information
+Vendors get added by coming through Vendor Onboarding first. Once Vendor Onboarding processes new/changed vendors, a file is dropped to a shared network folder for this route to pick up. This route takes the vendors from that file and UPSERTs them into Salesforce.
+
+------------------
+
+Weekly Enrollment Reports
+
+Weekly reports of vendor enrollments. Some are sent to internal only, others to external contacts. 

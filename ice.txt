@@ -1,0 +1,31 @@
+Please see below feedback from our engineer.
+
+The way that they are building the JWEHeader is different from how we do it because we include a keyID where as they do not. There are not methods to set the keyID when creating the header directly as they are doing in their code. They have to use JWEHeader.Builder to set the keyID like we are. Our sample code is below.
+
+Another difference was that they tried to put the payload into the JWE as a String object. We create a map [Map<String, Object> jsonObject] to initialize our Payload. In theory this is not a significant issue, at long as they decrypt it properly.
+
+Below is how we create JWE tokens. Attached is a unit test we have to create a JWE token both with SignedJWT payload and Plain text payload, and the unit test also decrypts it individually and verifies the original payload is in tack.
+
+public String createJWE(JWTClaimsSet claimsSet, RSAPublicKey rsaPublicKey, String keyId, boolean isPayloadSigned) {
+    JWEAlgorithm jweAlgorithm = JWEAlgorithm.RSA_OAEP_256;
+    EncryptionMethod encryptionMethod = EncryptionMethod.A128CBC_HS256;
+    JWEHeader.Builder headerBuilder = new JWEHeader.Builder(jweAlgorithm, encryptionMethod).keyID(keyId);
+    // Create an encrypted JWT object
+    Payload payload;
+    if (isPayloadSigned) {
+        SignedJWT signedJWT = createJWS(claimsSet);
+        payload = new Payload(signedJWT);
+    } else {
+        payload = new Payload(claimsSet.toJSONObject());
+    }
+    JWEObject jweObject = new JWEObject(headerBuilder.build(), payload);
+    // Create an RSAEncrypter with the specified public RSA key
+    RSAEncrypter encrypter = new RSAEncrypter(rsaPublicKey);
+    // Do the encryption
+    try {
+        jweObject.encrypt(encrypter);
+    } catch (JOSEException e) {
+        throw new JWTSecurityException("Unable to encrypt JWT.", e);
+    }
+    return jweObject.serialize();
+}

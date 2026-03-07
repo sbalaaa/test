@@ -1,0 +1,71 @@
+**To migrate from Spring Boot 2.1 → 3.2 using OpenRewrite, you should run a sequence of recipes that first modernize your Java baseline, then upgrade Spring Boot itself, and finally handle Jakarta namespace changes. The recommended order is: Java upgrade → Spring framework upgrade → Spring Boot upgrade → Jakarta migration.** 
+
+---
+
+## 🔑 Recommended Recipe Sequence
+
+### 1. **Prepare the Environment**
+- **Install JDK 17 or higher** (Spring Boot 3 requires Java 17).
+- Ensure your Maven plugin and BOM are aligned (`rewrite-maven-plugin:6.32.0`, `rewrite-bom:8.74.3`).
+
+---
+
+### 2. **Upgrade Java Baseline**
+Run recipes that modernize your code to Java 17:
+- `org.openrewrite.java.migrate.UpgradeToJava17`
+- `org.openrewrite.java.migrate.UseTextBlocks` (optional, for cleaner string handling)
+- `org.openrewrite.java.migrate.UseRecords` (if applicable)
+
+This ensures your project compiles cleanly on JDK 17 before touching Spring Boot.
+
+---
+
+### 3. **Upgrade Spring Framework**
+Apply recipes that align your code with Spring 6 (the foundation of Boot 3):
+- `org.openrewrite.java.spring.framework.UpgradeSpringFramework_6_0`
+- `org.openrewrite.java.spring.framework.MigrateSpringSecurity6`
+- `org.openrewrite.java.spring.framework.MigrateSpringWebMvcToSpringWebFlux` (if you use reactive APIs)
+
+---
+
+### 4. **Upgrade Spring Boot**
+Run the Boot-specific recipes:
+- `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0`
+- `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1`
+- `org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2`
+
+These recipes update your `pom.xml` dependencies, configuration properties, and annotations to match Boot 3.x conventions.
+
+---
+
+### 5. **Jakarta Namespace Migration**
+Spring Boot 3 depends on Jakarta EE 9+, so all `javax.*` imports must move to `jakarta.*`. Recipes:
+- `org.openrewrite.java.migrate.JavaxToJakarta`
+- `org.openrewrite.java.migrate.persistence.JavaxPersistenceToJakartaPersistence`
+
+This step is critical for JPA, Servlet, and validation APIs.
+
+---
+
+## 📋 Suggested Execution Order
+
+| Step | Recipe(s) | Purpose |
+|------|-----------|---------|
+| 1 | `UpgradeToJava17` | Ensure JDK 17 compatibility |
+| 2 | `UpgradeSpringFramework_6_0` | Align with Spring 6 |
+| 3 | `UpgradeSpringBoot_3_0 → 3_2` | Incremental Boot upgrades |
+| 4 | `JavaxToJakarta` | Namespace migration |
+| 5 | Optional cleanup recipes | Modernize code style |
+
+---
+
+## ⚠️ Risks & Trade-offs
+- **Manual fixes still required**: Recipes cover most changes, but edge cases (custom security configs, deprecated starters) may need manual edits.
+- **Incremental commits recommended**: Run recipes step by step, commit after each, and test before moving on.
+- **Third-party dependencies**: Ensure libraries you use (Camel, Quartz, Axis2, etc.) are compatible with Boot 3 and Jakarta EE.
+
+---
+
+👉 My recommendation: **Start with `UpgradeToJava17`, then run Boot upgrade recipes one by one, finishing with `JavaxToJakarta`.** This staged approach makes debugging easier and ensures you don’t get overwhelmed by too many changes at once.
+
+Would you like me to draft a **ready-to-run Maven plugin configuration** that includes all these recipes in the correct order, so you can copy-paste it into your `pom.xml`?

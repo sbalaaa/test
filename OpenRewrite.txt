@@ -1,0 +1,362 @@
+https://docs.openrewrite.org/
+
+https://www.youtube.com/watch?v=nz29-DWeV44
+
+org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+
+
+Migrating to Spring Boot 3.5 on the Moderne Platform
+https://www.youtube.com/watch?v=LgvqAzTxkEU
+org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5
+
+Automate Spring Boot 2.x to 3.x Migration With OpenRewrite | ‪@Javatechie‬
+https://www.youtube.com/watch?v=50mhP1SBTis
+https://github.com/Java-Techie-jt/spring-security-jwt-example
+https://docs.openrewrite.org/recipes/java/spring/boot3/upgradespringboot_3_2
+rewrite:run
+rewrite:dryRun
+
+AI for Java Developers: Full Course / Workshop on Getting Started with Spring AI
+https://www.youtube.com/watch?v=FzLABAppJfM
+
+https://www.youtube.com/watch?v=ui6egpDRwg4 - Spring boot migrator
+
+https://www.moderne.ai/use-cases
+
+Sample repo for udemy course:::
+https://www.udemy.com/course/automated-code-refactoring-with-openrewrite/learn/lecture/46898317#overview
+https://github.com/openrewrite/spring-petclinic-migration
+
+
+Maven plugin::
+https://docs.openrewrite.org/reference/rewrite-maven-plugin
+
+
+The below plugin needs to be removed.(from the sample pet clinic repo)
+io.java.javaformat
+
+Maven goal:: Can be seen in intellij
+rewrite:run
+
+As run::: Plese see the messages in the console
+No recepies are added
+
+
+-----------------
+
+We need to configure the receipe in the rewrite-maven-plugin
+<activeRecipes>
+     <recipe>org.openrewrite.java.Spring</recipe>
+</activeRecipes>
+
+--in udemy
+<recipe>org.openrewrite.java.OrderImports</recipe>
+<recipe>org.openrewrite.java.format.AutoFormat</recipe>
+
+
+-----
+
+https://docs.openrewrite.org/concepts-and-explanations/lst-examples
+
+
+openrewrite converts source code to Lossless Semantic Trees.
+
+For instance, a ClassDeclaration is an LST that defines a class. 
+A typical class declaration will be composed of elements such as fields, 
+methods, constructors, and inner classes. Each of those elements are, 
+themselves, an LST. So the term "LST" may refer to an entire, 
+complete Java file or just one piece of it.
+
+What is Recepie?
+
+Recepie is applied on Lossless Semantic Trees to modify the code.
+
+Recepie is group of actions that will be applied on Lossless Semantic Trees to modify the code.
+
+Using Recepie, remove the unused imports, order the imports
+---
+https://www.udemy.com/course/automated-code-refactoring-with-openrewrite/learn/lecture/46898419#overview
+
+https://www.moderne.ai/
+Visitors::
+----------
+Visitors is in the Recepie actually modify the code.(current object reference)
+Visitors cursor can refer the parents and parents other siblings
+
+https://en.wikipedia.org/wiki/Visitor_pattern
+
+
+Styles::
+
+-----------
+Working with openrewrite:::
+Recepie Names:::
+org.openrewrite.java.OrderImports;
+org.openrewrite.java.ShortenFullyQualifiedTypeReferences
+
+Running Recepies without modifying the build::
+mvn -U org.openrewrite.maven:rewrite-maven-plugin:run -Drewrite.activeRecipes=org.openrewrite.java.OrderImports,org.openrewrite.java.ShortenFullyQualifiedTypeReferences
+
+rewrite:dryRun
+rewrite:runNoFork
+
+
+
+
+------------
+Finding Recepies
+https://docs.openrewrite.org/recipes
+https://docs.openrewrite.org/recipes/java
+https://docs.openrewrite.org/recipes/java/format/autoformat
+
+To find Recepies in the classpath::
+rewrite:help
+rewrite:discover -Ddetail=true
+
+----Configuration of receipe from existing receipe
+https://www.udemy.com/course/automated-code-refactoring-with-openrewrite/learn/lecture/46964625#overview
+To configure receipe like change package, we need to modidy rewrite.yml
+After configure the receipe, we need to configure receipe in pom.xml
+<recipe>com.yourorg.ChangePackageExample
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.yourorg.ChangePackageExample
+displayName: Rename package name example
+recipeList:
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: com.yourorg.foo
+      newPackageName: com.yourorg.bar
+
+
+
+------How to use Styles?
+Is used to specify line breaks, spaces, spaces between brackets
+rewrite:discover -> List available styles
+
+https://docs.openrewrite.org/reference/rewrite-maven-plugin
+<activeStyles>
+   <!-- This style is made up for sake of example. It isn't packaged with OpenRewrite -->
+   <style>org.openrewrite.java.GoogleJavaFormat</style>
+</activeStyles>
+
+
+https://docs.openrewrite.org/recipes/java/format
+
+-------Adding new receipe sources
+https://docs.openrewrite.org/recipes/java/spring
+
+https://docs.openrewrite.org/recipes/java/spring/boot3
+
+https://docs.openrewrite.org/recipes/java/spring/boot3/upgradespringboot_3_2
+
+<project>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.openrewrite.maven</groupId>
+        <artifactId>rewrite-maven-plugin</artifactId>
+        <version>6.30.0</version>
+        <configuration>
+          <exportDatatables>true</exportDatatables>
+          <activeRecipes>
+            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2</recipe>
+          </activeRecipes>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-spring</artifactId>
+            <version>6.25.1</version>
+          </dependency>
+		  <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-java</artifactId>
+            <version>8.36.0</version> // need to find the correct version
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+
+
+
+----------Recepie Composition
+
+Recepie Composition using other recepies.
+
+https://www.udemy.com/course/automated-code-refactoring-with-openrewrite/learn/lecture/46972761#overview
+
+type: specs.openrewrite.org/v1beta/recipe
+name: com.example.CompositeRecipe
+displayName: Composite Recipe
+description: Apply multiple transformations together
+recipeList:
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: java.util.Vector
+      newFullyQualifiedTypeName: java.util.ArrayList
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: java.util.List add(..)
+      newMethodName: append
+  - org.openrewrite.java.format.AutoFormat
+
+---To migrate to spring 3.2
+
+type: specs.openrewrite.org/v1beta/recipe
+name: com.example.MigrateSpringBoot_2_1_to_3_2
+displayName: Migrate Spring Boot 2.1.10 → 3.2.x
+description: Upgrade project dependencies and code to Spring Boot 3.2.x
+recipeList:
+  # Upgrade Spring Boot core
+  - org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2
+
+  # Handle Jakarta EE namespace migration (javax → jakarta)
+  - org.openrewrite.java.migrate.JavaxToJakarta
+
+  # Update Spring Framework APIs
+  - org.openrewrite.java.spring.framework.UpgradeSpringFramework_6_0
+
+  # Update Spring Data APIs
+  - org.openrewrite.java.spring.data.UpgradeSpringData_3_0
+
+  # Apply best practices and formatting
+  - org.openrewrite.java.format.AutoFormat
+----
+mvn rewrite:run -Drewrite.configLocation=rewrite.yml
+----
+<plugin>
+  <groupId>org.openrewrite.maven</groupId>
+  <artifactId>rewrite-maven-plugin</artifactId>
+  <version>5.28.0</version> <!-- check latest -->
+  <configuration>
+    <activeRecipes>
+      <!-- Composite recipe for upgrading to Spring Boot 3.2 -->
+      <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2</recipe>
+    </activeRecipes>
+  </configuration>
+</plugin>
+
+
+
+---------------------
+
+public String getToken(String salesforceInstanceUrl, 
+                       String clientId, 
+                       String clientSecret, 
+                       String userName, 
+                       String password, 
+                       String orgName) {
+
+    // Prepare credentials
+    MultiValueMap<String, String> credentials = new LinkedMultiValueMap<>();
+    credentials.add("grant_type", "password");
+    credentials.add("client_id", clientId);
+    credentials.add("client_secret", clientSecret);
+    credentials.add("username", userName);
+    credentials.add("password", password);
+
+    // Build OAuth URL
+    URI oAuthURL = UriComponentsBuilder
+            .fromHttpUrl(salesforceInstanceUrl + "/services/oauth2/token")
+            .build()
+            .encode()
+            .toUri();
+
+    // Create RestClient
+    RestClient client = RestClient.create();
+
+    String token = null;
+    try {
+        AuthResponse response = client.post()
+            .uri(oAuthURL)
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(credentials)
+            .retrieve()
+            .body(AuthResponse.class);
+
+        token = response.getAccessToken();
+    } catch (Exception e) {
+        log.error("Error in getting token {}", e.toString(), e);
+    }
+
+    return token;
+}
+
+
+---------------------
+
+public Map<String, List<String>> getLogFileByName(String token, 
+                                                  String salesforceInstanceUrl, 
+                                                  String logFileVersion) {
+
+    Map<String, List<String>> eventMap = new HashMap<>();
+
+    if (token == null) {
+        return eventMap;
+    }
+
+    // Build the query URL
+    String queryUrl = salesforceInstanceUrl + String.format(
+        "/services/data/%s/query?q=SELECT+Id,+EventType,+LogDate,+LogFileLength,+LogFile+FROM+EventLogFile+ORDER+BY+CreatedDate+DESC+Nulls+Last",
+        logFileVersion
+    );
+
+    // Create RestClient
+    RestClient client = RestClient.create();
+
+    try {
+        EventLog response = client.get()
+            .uri(queryUrl)
+            .accept(MediaType.APPLICATION_JSON)
+            .header(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token))
+            .retrieve()
+            .body(EventLog.class);
+
+        for (EventLogRecord record : response.getRecords()) {
+            eventMap.computeIfAbsent(record.getEventType(), k -> new ArrayList<>())
+                    .add(record.getId());
+        }
+
+    } catch (Exception e) {
+        log.error("Error in fetching log file {}", e.toString(), e);
+    }
+
+    return eventMap;
+}
+
+--------------------------
+
+public String getLogFileContent(String bearerToken, 
+                                String id, 
+                                String salesforceInstanceUrl, 
+                                String logFileVersion) {
+
+    log.info("File id is -> {}", id);
+
+    // Build the URL
+    String url = salesforceInstanceUrl + String.format(
+        "/services/data/%s/sobjects/EventLogFile/%s/LogFile", 
+        logFileVersion, id
+    );
+
+    // Create RestClient
+    RestClient client = RestClient.create();
+
+    String resultOut = null;
+    try {
+        resultOut = client.get()
+            .uri(url)
+            .accept(MediaType.APPLICATION_JSON)
+            .header(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", bearerToken))
+            .retrieve()
+            .body(String.class);
+    } catch (Exception e) {
+        log.error("Error in fetching log file content {}", e.toString(), e);
+    }
+
+    return resultOut;
+}
+
+--------------------------

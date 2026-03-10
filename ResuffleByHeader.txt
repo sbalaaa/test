@@ -1,0 +1,36 @@
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
+
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.Arrays;
+import java.util.List;
+
+public class ReshuffleByHeader {
+    public static void main(String[] args) throws Exception {
+        // Read CSV with headers
+        FileReader reader = new FileReader("input.csv");
+        CSVParser parser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
+
+        // Define new header order
+        List<String> newOrder = Arrays.asList("Name", "Age", "City"); // example
+
+        // Write reshuffled CSV
+        FileWriter writer = new FileWriter("output.csv");
+        CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(newOrder.toArray(new String[0])));
+
+        for (CSVRecord record : parser) {
+            // Rearrange values according to new header order
+            String[] newRow = new String[newOrder.size()];
+            for (int i = 0; i < newOrder.size(); i++) {
+                newRow[i] = record.get(newOrder.get(i));
+            }
+            printer.printRecord((Object[]) newRow);
+        }
+
+        parser.close();
+        printer.close();
+    }
+}

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.2.12</version>
+		<relativePath /> 
+	</parent>
+	<groupId>com</groupId>
+	<artifactId>my-migration</artifactId>
+	<version>1.0</version>
+	<name>my-migration</name>
+	<description>my-migration project for migration</description>
+
+	<properties>
+		<java.version>21</java.version>
+        <spring-boot.version>3.2.0</spring-boot.version>
+        <camel.version>4.18.0</camel.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+	</properties>
+	
+	<!-- BOM ensures consistent versions -->
+	  <dependencyManagement>
+		<dependencies>
+			
+			 <!-- Import Spring Boot BOM -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Import Apache Camel BOM -->
+            <dependency>
+                <groupId>org.apache.camel</groupId>
+                <artifactId>camel-bom</artifactId>
+                <version>${camel.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-bom</artifactId>
+            <version>2.25.3</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+
+            
+		
+		
+		  <dependency>
+			<groupId>org.openrewrite</groupId>
+			<artifactId>rewrite-bom</artifactId>
+			<version>8.74.3</version>
+			<type>pom</type>
+			<scope>import</scope>
+		  </dependency>
+		</dependencies>
+		
+		
+		
+		
+	  </dependencyManagement>
+
+	<dependencies>
+	
+		 <!-- Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        
+        <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+        
+
+        <!-- Camel Spring Boot Starter -->
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-spring-boot-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-core-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-mail-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        
+         <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-sql-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        
+         <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-file-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        
+        <dependency>
+    <groupId>org.apache.camel.springboot</groupId>
+    <artifactId>camel-quartz-starter</artifactId>
+    <version>4.18.0</version>
+</dependency>
+
+        
+        
+         <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-netty-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-jackson-starter</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+	
+		
+	
+	
+
+		<!-- https://mvnrepository.com/artifact/org.apache.camel/camel-csv
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-csv</artifactId>
+			<version>${camel.version}</version>
+		</dependency-->
+
+
+
+		<dependency>
+    <groupId>com.github.ulisesbocchio</groupId>
+    <artifactId>jasypt-spring-boot-starter</artifactId>
+    <version>3.0.5</version>
+</dependency>
+
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+
+
+		<!-- dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency-->
+
+
+<!-- Log4j 2 API -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+    </dependency>
+
+    <!-- Log4j 2 Core -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+    </dependency>
+
+    <!-- Log4j 2 Spring Boot Support -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-spring-boot</artifactId>
+    </dependency>
+
+    <!-- Optional: Log4j SLF4J Bridge (if using SLF4J) -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j2-impl</artifactId>
+    </dependency>
+
+
+<dependency>
+    <groupId>com.microsoft.sqlserver</groupId>
+    <artifactId>mssql-jdbc</artifactId>
+    <version>12.6.1.jre11</version>
+</dependency>
+
+
+	<dependency>
+    <groupId>commons-io</groupId>
+    <artifactId>commons-io</artifactId>
+    <version>2.21.0</version>
+</dependency>
+
+	<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+</dependency>
+
+	
+
+
+
+
+
+	</dependencies>
+	
+
+	<build>
+		
+		<pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.openrewrite.maven</groupId>
+          <artifactId>rewrite-maven-plugin</artifactId>
+          <version>6.32.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.openrewrite.recipe</groupId>
+              <artifactId>rewrite-spring</artifactId>
+              <version>${rewrite.recipe.spring.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.openrewrite</groupId>
+              <artifactId>rewrite-java</artifactId>
+              <version>${rewrite.java.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+		
+		
+		
+		
+		<plugins>
+			
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			
+			<plugin>
+        <groupId>org.openrewrite.maven</groupId>
+        <artifactId>rewrite-maven-plugin</artifactId>
+        <configuration>
+          <exportDatatables>true</exportDatatables>
+          <activeRecipes>
+            <recipe>org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2</recipe>
+          </activeRecipes>
+        </configuration>
+		<dependencies>
+			<dependency>
+			  <groupId>org.openrewrite.recipe</groupId>
+			  <artifactId>rewrite-spring</artifactId>
+			  <version>6.25.1</version> <!-- explicit version -->
+			</dependency>
+			<dependency>
+			  <groupId>org.openrewrite</groupId>
+			  <artifactId>rewrite-java</artifactId>
+			  <version>8.74.3</version> <!-- explicit version -->
+			</dependency>
+		</dependencies>
+    </plugin>
+
+		</plugins>
+
+
+	</build>
+
+
+</project>
